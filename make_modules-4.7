@@ -1,0 +1,44 @@
+#!/bin/bash
+clear
+TOPDIR=$(cd $(dirname "$0"); pwd)
+HOME=$TOPDIR/..
+
+if [ -d out ]
+ then
+   rm -rf out
+   tput setaf 7
+   echo
+   echo "Old 'out' directory deleted"
+   echo
+   echo
+   tput sgr0
+fi
+
+export ARCH=arm 
+export CROSS_COMPILE=$HOME/toolchains/arm-eabi-linaro-4.7.2/bin/arm-eabi-
+export KLIB=$HOME/kernel
+export KLIB_BUILD=$KLIB
+cd compat-wireless-wl12xx/
+./scripts/driver-select wl12xx
+tput setaf 4
+make
+tput sgr0
+mkdir -p ../out
+cp ./net/wireless/cfg80211.ko ../out/.
+cp ./net/mac80211/mac80211.ko ../out/.
+cp ./compat/compat.ko ../out/.
+cp ./compat/compat_firmware_class.ko ../out/.
+cp ./drivers/net/wireless/wl12xx/wl12xx.ko ../out/.
+cp ./drivers/net/wireless/wl12xx/wl12xx_sdio.ko ../out/.
+cp ./drivers/net/wireless/wl12xx/wl12xx_spi.ko ../out/.
+STRIP=$HOME/toolchains/arm-eabi-linaro-4.7.2/bin/arm-eabi-strip
+cd ../out
+$STRIP --strip-unneeded cfg80211.ko
+$STRIP --strip-unneeded mac80211.ko
+$STRIP --strip-unneeded compat.ko
+$STRIP --strip-unneeded compat_firmware_class.ko
+$STRIP --strip-unneeded wl12xx.ko
+$STRIP --strip-unneeded wl12xx_sdio.ko
+$STRIP --strip-unneeded wl12xx_spi.ko
+cd ../compat-wireless-wl12xx/
+make clean
